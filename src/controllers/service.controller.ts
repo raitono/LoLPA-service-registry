@@ -26,7 +26,7 @@ export class ServiceController {
       };
     }
 
-    cnt.services[key].timestamp = Math.floor(new Date().getTime() / 1000).toString();
+    cnt.services[key].timestamp = Math.floor(new Date().getTime() / 1000);
     ctx.body = key;
   }
 
@@ -38,15 +38,28 @@ export class ServiceController {
   static find(ctx:Router.RouterContext, cnt:ServiceController) {
     const name = ctx.params['name'];
     const version = ctx.params['version'];
+
+    cnt.cull();
+
     const candidates = Object.values(cnt.services)
       .filter(service => service.name === name && Semver.satisfies(service.version, version));
 
-    if (candidates) {
+    if (candidates[0]) {
       // Randomly spread to simulate load balancing
       ctx.body = JSON.stringify(candidates[Math.floor(Math.random() * candidates.length)]);
     } else {
+      ctx.body = 'Not Found';
       ctx.status = 404;
     }
+  }
+
+  cull() {
+    const now = Math.floor(new Date().getTime() / 1000);
+    Object.keys(this.services).forEach((key) => {
+      if (this.services[key].timestamp + this.timeout < now) {
+        delete this.services[key];
+      }
+    });
   }
 
   getKey(ctx:Router.RouterContext) {
@@ -62,5 +75,5 @@ interface ServiceModel {
   port: string;
   name: string;
   version: string;
-  timestamp?: string;
+  timestamp?: number;
 }

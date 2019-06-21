@@ -9,7 +9,6 @@ export class ServiceController {
   constructor() {
     this.services = {};
     this.timeout = 30;
-    debug('Controller created');
   }
 
   static register(ctx:Router.RouterContext, cnt:ServiceController) {
@@ -24,6 +23,7 @@ export class ServiceController {
         name: ctx.params['name'],
         version: ctx.params['version'],
       };
+      debug(`Registered service ${key}`);
     }
 
     cnt.services[key].timestamp = Math.floor(new Date().getTime() / 1000);
@@ -31,7 +31,7 @@ export class ServiceController {
   }
 
   static unregister(ctx:Router.RouterContext, cnt:ServiceController) {
-    delete cnt.services[cnt.getKey(ctx)];
+    cnt.unregisterService(cnt.getKey(ctx));
     ctx.body = cnt.getKey(ctx);
   }
 
@@ -39,7 +39,7 @@ export class ServiceController {
     const name = ctx.params['name'];
     const version = ctx.params['version'];
 
-    cnt.cull();
+    cnt.unregisterOldServices();
 
     const candidates = Object.values(cnt.services)
       .filter(service => service.name === name && Semver.satisfies(service.version, version));
@@ -53,13 +53,18 @@ export class ServiceController {
     }
   }
 
-  cull() {
+  unregisterOldServices() {
     const now = Math.floor(new Date().getTime() / 1000);
     Object.keys(this.services).forEach((key) => {
       if (this.services[key].timestamp + this.timeout < now) {
-        delete this.services[key];
+        this.unregisterService(key);
       }
     });
+  }
+
+  unregisterService(key:string) {
+    delete this.services[key];
+    debug(`Unregistered service ${key}`);
   }
 
   getKey(ctx:Router.RouterContext) {

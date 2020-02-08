@@ -32,11 +32,12 @@
     "supports-color": "^7.1.0"
   },
   "devDependencies": {
+    "@types/dotenv-safe": "^8.0.0",
     "@types/koa": "^2.11.0",
     "@types/koa-router": "^7.4.0",
     "@types/node": "^13.0.0",
     "@types/semver": "^7.0.0",
-    "eslint": "^6.8.0",
+    "eslint": "^6.0.0",
     "nodemon": "^2.0.0",
     "tslint-to-eslint-config": "^0.5.0",
     "typescript": "^3.7.5"
